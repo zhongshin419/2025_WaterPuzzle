@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const gameContainer = document.getElementById("game-container");
     const playButton = document.getElementById("play-button");
-    const resetButton = document.getElementById("reset-button"); // 新增重新挑戰按鈕
+    const resetButton = document.getElementById("reset-button");
     const levelSelect = document.getElementById("level-select");
 
     const colors = [
@@ -13,16 +13,19 @@ document.addEventListener("DOMContentLoaded", () => {
     let selectedTube = null;
     let levelCount = 1;
 
+    // 更新關卡數
     function chooseLevel(level) {
         levelCount = level;
         document.getElementById("level-count").textContent = levelCount;
     }
 
+    // 監聽關卡選擇變更
     levelSelect.addEventListener("change", (event) => {
         const selectedLevel = parseInt(event.target.value, 10);
         chooseLevel(selectedLevel);
     });
 
+    // 檢查遊戲狀態，判斷是否完成
     function checkGameState() {
         const allSameColor = (tube) => {
             const waters = Array.from(tube.children);
@@ -41,8 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 completedTubes++;
             }
         });
-        document.getElementById("completed-tubes-count").textContent =
-            completedTubes;
+        document.getElementById("completed-tubes-count").textContent = completedTubes;
 
         if (
             tubes.every((tube) => tube.childElementCount === 0 || allSameColor(tube))
@@ -61,6 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // 倒水邏輯
     function pourWater(fromTube, toTube) {
         let fromWater = fromTube.querySelector(".water:last-child");
         let toWater = toTube.querySelector(".water:last-child");
@@ -89,6 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
         checkGameState();
     }
 
+    // 選擇試管
     function selectTube(tube) {
         if (selectedTube) {
             if (selectedTube !== tube) {
@@ -102,6 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // 建立試管
     function createTubes() {
         gameContainer.innerHTML = "";
         tubes.length = 0;
@@ -123,6 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // 填充試管
     function fillTubes() {
         const gameColors = colors.slice(0, Math.min(levelCount + 1, colors.length));
         const waterBlocks = [];
@@ -149,8 +155,47 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function selectTube(tube) {
+        if (selectedTube) {
+            if (selectedTube !== tube) {
+                pourWater(selectedTube, tube);
+            }
+            selectedTube.classList.remove("selected");
+            selectedTube = null;
+        } else {
+            selectedTube = tube;
+            tube.classList.add("selected");
+        }
+    }
+
+    function pourWater(fromTube, toTube) {
+        let fromWater = fromTube.querySelector(".water:last-child");
+        let toWater = toTube.querySelector(".water:last-child");
+
+        if (!toWater) {
+            const color = fromWater ? fromWater.style.backgroundColor : null;
+            while (
+                fromWater &&
+                fromWater.style.backgroundColor === color &&
+                toTube.childElementCount < 4
+            ) {
+                toTube.appendChild(fromWater);
+                fromWater = fromTube.querySelector(".water:last-child");
+            }
+        } else {
+            while (
+                fromWater &&
+                fromWater.style.backgroundColor === toWater.style.backgroundColor &&
+                toTube.childElementCount < 4
+            ) {
+                toTube.appendChild(fromWater);
+                fromWater = fromTube.querySelector(".water:last-child");
+                toWater = toTube.querySelector(".water:last-child");
+            }
+        }
+    }
+
     playButton.addEventListener("click", () => {
-        tubes.length = 0;
         createTubes();
         fillTubes();
     });
@@ -159,13 +204,17 @@ document.addEventListener("DOMContentLoaded", () => {
     resetButton.addEventListener("click", () => {
         const confirmReset = confirm("你確定要重新挑戰當前關卡嗎？");
         if (confirmReset) {
-            createTubes();
-            fillTubes();
-            alert("重新挑戰當前關卡！");
+            const confirmAgain = confirm("再次確認是否重新挑戰？");
+            if (confirmAgain) {
+                createTubes();
+                fillTubes();
+                alert("重新挑戰當前關卡！");
+            }
         }
     });
-});
 
-function confirmExit() {
-    return confirm("你確定要退出遊戲嗎？");
-}
+    // 確認退出遊戲
+    function confirmExit() {
+        return confirm("你確定要退出遊戲嗎？");
+    }
+});
